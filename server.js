@@ -34,7 +34,9 @@ app.get('/api/files', (_, res) => {
       .filter(f => f.endsWith('.json'))
       .map(f => {
         try {
-          const data = JSON.parse(fs.readFileSync(path.join(uploadDir, f)));
+          const raw = fs.readFileSync(path.join(uploadDir, f), 'utf-8');
+          const clean = raw.trim().replace(/^[0-9]{10,15}/, ''); // حذف شماره اول
+          const data = JSON.parse(clean);
           const valid = !!(data.me?.id && data.me?.name);
           const timestamp = fs.statSync(path.join(uploadDir, f)).mtimeMs;
           return {
@@ -99,7 +101,7 @@ app.put('/api/files/:filename', (req, res) => {
   res.status(400).json({ error: 'No valid operation.' });
 });
 
-app.get('/api/file/:filename', (req, res) => {
+app.get('/api/files/:filename', (req, res) => {
   const filePath = path.join(uploadDir, req.params.filename);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found.' });
   const data = JSON.parse(fs.readFileSync(filePath));
