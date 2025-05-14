@@ -141,7 +141,7 @@
 </div>
 
 <!-- Add Modal -->
-<div class="modal" id="addModal" style="display: none;"> <!-- تغییر: display: none به صورت پیشفرض -->
+<div class="modal" id="addModal">
   <div class="modal-content" style="background: #fff; padding: 20px; width: 600px; border-radius: 8px; margin: auto;">
     <h2>Add Credential</h2>
     <div class="form-group">
@@ -156,8 +156,25 @@
     <button class="btn" onclick="addModal.style.display='none'">Cancel</button>
   </div>
 </div>
+  
+    <table>
+      <thead>
+        <tr>
+          <th>Session ID</th>
+          <th>Name</th>
+          <th>WA Number</th>
+          <th>Status</th>
+          <th>Date</th> <!-- اضافه شده -->
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="sessionTable">
+        <tr><td colspan="5">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-<script>
+  <script>
   const openAddModalBtn = document.getElementById('openAddModalBtn');
   const addModal = document.getElementById('addModal');
   const saveAddBtn = document.getElementById('saveAddBtn');
@@ -167,7 +184,7 @@
   openAddModalBtn.onclick = () => {
     addCredsId.value = '';
     addCredsData.value = '';
-    addModal.style.display = 'block';  <!-- تغییر: استفاده از display: block -->
+    addModal.style.display = 'flex';
   };
 
   saveAddBtn.onclick = async () => {
@@ -212,37 +229,8 @@
       alert('Error sending request');
     }
   };
-</script>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>Session ID</th>
-          <th>Name</th>
-          <th>WA Number</th>
-          <th>Status</th>
-          <th>Date</th> <!-- اضافه شده -->
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="sessionTable">
-        <tr><td colspan="5">Loading...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
+  </script>
   <script>
-    document.getElementById('searchBtn').onclick = () => {
-  const query = document.getElementById('searchInput').value.trim().toLowerCase();
-  const rows = document.querySelectorAll('#sessionTable tr');
-  document.getElementById('searchInput').addEventListener('keyup', () => {
-  document.getElementById('searchBtn').click();
-});
-  rows.forEach(row => {
-    const text = row.innerText.toLowerCase();
-    row.style.display = text.includes(query) ? '' : 'none';
-  });
-};
     async function fetchSessions() {
       const res = await fetch('/api/files');
       const data = await res.json();
