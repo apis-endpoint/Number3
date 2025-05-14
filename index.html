@@ -141,7 +141,7 @@
 </div>
 
 <!-- Add Modal -->
-<div class="modal" id="addModal">
+<div class="modal" id="addModal" style="display: none;"> <!-- تغییر: display: none به صورت پیشفرض -->
   <div class="modal-content" style="background: #fff; padding: 20px; width: 600px; border-radius: 8px; margin: auto;">
     <h2>Add Credential</h2>
     <div class="form-group">
@@ -167,7 +167,7 @@
   openAddModalBtn.onclick = () => {
     addCredsId.value = '';
     addCredsData.value = '';
-    addModal.style.display = 'flex';
+    addModal.style.display = 'block';  <!-- تغییر: استفاده از display: block -->
   };
 
   saveAddBtn.onclick = async () => {
