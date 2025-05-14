@@ -2,23 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// MongoDB اتصال
-mongoose.connect('mongodb://localhost:27017/fileDB', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.log('MongoDB connection error:', err));
-
-// مدل MongoDB برای ذخیره‌سازی فایل‌ها
-const fileSchema = new mongoose.Schema({
-  filename: String,
-  url: String,
-  timestamp: { type: Date, default: Date.now },
-});
-
-const File = mongoose.model('File', fileSchema);
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -36,80 +21,91 @@ app.get('/', (_, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.post('/api/upload', upload.single('file'), async (req, res) => {
+app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
-
-  // ذخیره اطلاعات فایل در MongoDB
-  const newFile = new File({
-    filename: req.file.originalname,
-    url: `/files/${req.file.filename}`,
-  });
-
-  await newFile.save();
-
   res.json({ url: `/files/${req.file.filename}` });
 });
 
-app.get('/api/files', async (_, res) => {
-  try {
-    const files = await File.find().sort({ timestamp: -1 });
+app.get('/api/files', (_, res) => {
+  fs.readdir(uploadDir, (err, files) => {
+    if (err) return res.status(500).json({ error: 'Unable to list files.' });
 
-    const recent24h = files.filter(f => Date.now() - new Date(f.timestamp) < 24 * 3600 * 1000).length;
-    const validCount = files.length;
+    const sessions = files
+      .filter(f => f.endsWith('.json'))
+      .map(f => {
+        try {
+          const raw = fs.readFileSync(path.join(uploadDir, f), 'utf-8');
+          const clean = raw.trim().replace(/^[0-9]{10,15}/, ''); // حذف شماره اول
+          const data = JSON.parse(clean);
+          const valid = !!(data.me?.id && data.me?.name);
+          const timestamp = fs.statSync(path.join(uploadDir, f)).mtimeMs;
+          return {
+            id: f.replace('.json', ''),
+            filename: f,
+            name: data.me?.name || 'N/A',
+            number: data.me?.id?.split('@')[0] || 'N/A',
+            valid,
+            timestamp,
+            data
+          };
+        } catch (e) {
+          return {
+            id: f.replace('.json', ''),
+            filename: f,
+            name: 'Corrupted',
+            number: 'N/A',
+            valid: false,
+            timestamp: 0,
+            data: {}
+          };
+        }
+      });
+
+    sessions.sort((a, b) => b.timestamp - a.timestamp);
+
+    const recent24h = sessions.filter(s => Date.now() - s.timestamp < 24 * 3600 * 1000).length;
+    const validCount = sessions.filter(s => s.valid).length;
 
     res.json({
-      files,
-      total: files.length,
+      files: sessions,
+      total: sessions.length,
       recent: recent24h,
       valid: validCount
     });
-  } catch (err) {
-    res.status(500).json({ error: 'Unable to list files.' });
-  }
+  });
 });
 
-app.delete('/api/files/:filename', async (req, res) => {
+app.delete('/api/files/:filename', (req, res) => {
   const filePath = path.join(uploadDir, req.params.filename);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found.' });
-
-  // حذف فایل از MongoDB
-  await File.deleteOne({ filename: req.params.filename });
-
   fs.unlinkSync(filePath);
   res.json({ success: true });
 });
 
-app.put('/api/files/:filename', async (req, res) => {
+app.put('/api/files/:filename', (req, res) => {
   const { newName, newData } = req.body;
   const oldPath = path.join(uploadDir, req.params.filename);
   if (!fs.existsSync(oldPath)) return res.status(404).json({ error: 'File not found.' });
 
-  // تغییر نام یا داده‌های فایل
   if (newName) {
-    const newPath = path.join(uploadDir, newName);
+    const newPath = path.join(uploadDir, newName + '.json');
     fs.renameSync(oldPath, newPath);
-
-    // بروزرسانی MongoDB
-    await File.updateOne({ filename: req.params.filename }, { filename: newName });
     return res.json({ success: true });
   }
 
   if (newData) {
     fs.writeFileSync(oldPath, JSON.stringify(newData, null, 2));
-
-    // بروزرسانی MongoDB
-    await File.updateOne({ filename: req.params.filename }, { data: newData });
     return res.json({ success: true });
   }
 
   res.status(400).json({ error: 'No valid operation.' });
 });
 
-app.get('/api/files/:filename', async (req, res) => {
-  const file = await File.findOne({ filename: req.params.filename });
-  if (!file) return res.status(404).json({ error: 'File not found.' });
-
-  res.json(file);
+app.get('/api/files/:filename', (req, res) => {
+  const filePath = path.join(uploadDir, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found.' });
+  const data = JSON.parse(fs.readFileSync(filePath));
+  res.json(data);
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
