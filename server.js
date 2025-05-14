@@ -22,8 +22,7 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, uuidv4() + ext);
+        cb(null, file.originalname); // دقیقاً همان نامی که کلاینت فرستاده
     }
 });
 const upload = multer({ storage });

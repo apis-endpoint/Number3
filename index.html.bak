@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>مدیریت سشن‌ها</title>
+  <style>
+    body {
+      font-family: Vazirmatn, sans-serif;
+      direction: rtl;
+      margin: 30px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #444;
+    }
+    input[type="file"], button, input.rename {
+      margin: 10px 0;
+      padding: 8px;
+    }
+    .file-item {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    .file-actions {
+      margin-top: 8px;
+    }
+    .file-actions button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>مدیریت فایل‌های Session</h1>
+
+<input type="file" id="fileInput">
+<button onclick="uploadFile()">آپلود فایل</button>
+
+<h2>فایل‌های موجود:</h2>
+<div id="fileList"></div>
+
+<script>
+const apiBase = 'https://manager-session-ben.onrender.com';
+
+function uploadFile() {
+  const fileInput = document.getElementById('fileInput');
+  if (!fileInput.files.length) return alert('لطفاً یک فایل انتخاب کنید.');
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  fetch(`${apiBase}/api/upload`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(() => {
+    alert('فایل آپلود شد.');
+    fileInput.value = '';
+    loadFiles();
+  });
+}
+
+function loadFiles() {
+  fetch(`${apiBase}/api/files`)
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById('fileList');
+      list.innerHTML = '';
+      data.files.forEach(file => {
+        const div = document.createElement('div');
+        div.className = 'file-item';
+        div.innerHTML = `
+          <strong>${file}</strong><br>
+          <div class="file-actions">
+            <a href="${apiBase}/files/${file}" target="_blank">دانلود</a>
+            <button onclick="deleteFile('${file}')">حذف</button>
+            <input class="rename" placeholder="نام جدید">
+            <button onclick="renameFile('${file}', this)">تغییر نام</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    });
+}
+
+function deleteFile(filename) {
+  if (!confirm('مطمئنی که می‌خوای حذفش کنی؟')) return;
+  fetch(`${apiBase}/api/files/${filename}`, {
+    method: 'DELETE'
+  })
+  .then(res => res.json())
+  .then(() => {
+    alert('فایل حذف شد.');
+    loadFiles();
+  });
+}
+
+function renameFile(filename, btn) {
+  const newName = btn.previousElementSibling.value.trim();
+  if (!newName) return alert('نام جدید را وارد کن');
+  fetch(`${apiBase}/api/files/${filename}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newName })
+  })
+  .then(res => res.json())
+  .then(() => {
+    alert('تغییر نام انجام شد.');
+    loadFiles();
+  });
+}
+
+loadFiles();
+</script>
+
+</body>
+</html>
