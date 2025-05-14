@@ -2,72 +2,108 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.use(express.static(__dirname));
 
 const uploadDir = path.join(__dirname, 'files');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-// Multer config
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => {
-        cb(null, file.originalname); // دقیقاً همان نامی که کلاینت فرستاده
-    }
+  destination: (_, __, cb) => cb(null, uploadDir),
+  filename: (_, file, cb) => cb(null, file.originalname)
 });
 const upload = multer({ storage });
 
-// Upload endpoint
+app.get('/', (_, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.post('/api/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
-
-    const fileUrl = `${req.protocol}://${req.get('host')}/files/${req.file.filename}`;
-    res.json({ url: fileUrl });
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+  res.json({ url: `/files/${req.file.filename}` });
 });
 
-// List files
-app.get('/api/files', (req, res) => {
-    fs.readdir(uploadDir, (err, files) => {
-        if (err) return res.status(500).json({ error: 'Cannot read files.' });
-        res.json({ files });
+app.get('/api/files', (_, res) => {
+  fs.readdir(uploadDir, (err, files) => {
+    if (err) return res.status(500).json({ error: 'Unable to list files.' });
+
+    const sessions = files
+      .filter(f => f.endsWith('.json'))
+      .map(f => {
+        try {
+          const data = JSON.parse(fs.readFileSync(path.join(uploadDir, f)));
+          const valid = !!(data.me?.id && data.me?.name);
+          const timestamp = fs.statSync(path.join(uploadDir, f)).mtimeMs;
+          return {
+            id: f.replace('.json', ''),
+            filename: f,
+            name: data.me?.name || 'Unknown',
+            number: data.me?.id?.split('@')[0] || 'N/A',
+            valid,
+            timestamp,
+            data
+          };
+        } catch (e) {
+          return {
+            id: f.replace('.json', ''),
+            filename: f,
+            name: 'Corrupted',
+            number: 'N/A',
+            valid: false,
+            timestamp: 0,
+            data: {}
+          };
+        }
+      });
+
+    sessions.sort((a, b) => b.timestamp - a.timestamp);
+
+    const recent24h = sessions.filter(s => Date.now() - s.timestamp < 24 * 3600 * 1000).length;
+    const validCount = sessions.filter(s => s.valid).length;
+
+    res.json({
+      files: sessions,
+      total: sessions.length,
+      recent: recent24h,
+      valid: validCount
     });
+  });
 });
 
-// Delete file
 app.delete('/api/files/:filename', (req, res) => {
-    const filePath = path.join(uploadDir, req.params.filename);
-    fs.unlink(filePath, err => {
-        if (err) return res.status(404).json({ error: 'File not found.' });
-        res.json({ message: 'File deleted successfully.' });
-    });
+  const filePath = path.join(uploadDir, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found.' });
+  fs.unlinkSync(filePath);
+  res.json({ success: true });
 });
 
-// Rename file
 app.put('/api/files/:filename', (req, res) => {
-    const oldPath = path.join(uploadDir, req.params.filename);
-    const newName = req.body.newName;
-    if (!newName) return res.status(400).json({ error: 'New name required.' });
+  const { newName, newData } = req.body;
+  const oldPath = path.join(uploadDir, req.params.filename);
+  if (!fs.existsSync(oldPath)) return res.status(404).json({ error: 'File not found.' });
 
-    const newPath = path.join(uploadDir, newName);
-    fs.rename(oldPath, newPath, err => {
-        if (err) return res.status(500).json({ error: 'Rename failed.' });
-        res.json({ message: 'File renamed successfully.' });
-    });
+  if (newName) {
+    const newPath = path.join(uploadDir, newName + '.json');
+    fs.renameSync(oldPath, newPath);
+    return res.json({ success: true });
+  }
+
+  if (newData) {
+    fs.writeFileSync(oldPath, JSON.stringify(newData, null, 2));
+    return res.json({ success: true });
+  }
+
+  res.status(400).json({ error: 'No valid operation.' });
 });
 
-// Serve files
-app.use('/files', express.static(uploadDir));
-
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+app.get('/api/file/:filename', (req, res) => {
+  const filePath = path.join(uploadDir, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found.' });
+  const data = JSON.parse(fs.readFileSync(filePath));
+  res.json(data);
 });
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
