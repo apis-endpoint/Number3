@@ -121,6 +121,7 @@
           <th>Name</th>
           <th>WA Number</th>
           <th>Status</th>
+          <th>Date</th> <!-- اضافه شده -->
           <th>Actions</th>
         </tr>
       </thead>
@@ -148,12 +149,26 @@
         const numberCleaned = sess.number.replace(/[:].*$/, '');
         const jsonText = JSON.stringify(sess.data, null, 2);
 
+        // تاریخ به وقت افغانستان
+        const date = new Date(sess.timestamp);
+        const formattedDate = date.toLocaleString('en-US', {
+          timeZone: 'Asia/Kabul',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        });
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td data-label="Session ID">BEN-BOT~${sess.id}</td>
           <td data-label="Name">${sess.name}</td>
           <td data-label="WA Number">${numberCleaned}</td>
           <td data-label="Status" class="${statusClass}">${statusText}</td>
+          <td data-label="Date">${formattedDate}</td>
           <td data-label="Actions">
             <button class="view-btn" onclick="viewFile('${sess.filename}')">View</button>
             <button class="edit-btn" onclick="editFile('${sess.id}', '${sess.filename}', \`${jsonText.replace(/`/g, '\\`')}\`)">Edit</button>
