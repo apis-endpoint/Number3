@@ -150,9 +150,9 @@
           <td>${sess.number}</td>
           <td class="${sess.status === 'valid' ? 'status-valid' : 'status-invalid'}">${sess.status}</td>
           <td>
-            <button class="view-btn" onclick="viewFile('${sess.file}')">View</button>
-            <button class="edit-btn" onclick="editFile('${sess.file}', \`${sess.content.replace(/`/g, '\`')}\`)">Edit</button>
-            <button class="delete-btn" onclick="deleteFile('${sess.file}')">Delete</button>
+            <button class="view-btn" onclick="viewFile('${sess.filename}')">View</button>
+            <button class="edit-btn" onclick="editFile('${sess.filename}', \`${JSON.stringify(sess.data).replace(/`/g, '\\`')}\`)">Edit</button>
+            <button class="delete-btn" onclick="deleteFile('${sess.filename}')">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
