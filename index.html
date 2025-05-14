@@ -169,11 +169,11 @@
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>BEN-BOT~${sess.id}</td>
-          <td>${sess.name}</td>
-          <td>${numberCleaned}</td>
-          <td class="${statusClass}">${statusText}</td>
-          <td>
+          <td data-label="Session ID">BEN-BOT~${sess.id}</td>
+          <td data-label="Name">${sess.name}</td>
+          <td data-label="WA Number">${numberCleaned}</td>
+          <td data-label="Status" class="${statusClass}">${statusText}</td>
+          <td data-label="Actions">
             <button class="view-btn" onclick="viewFile('${sess.filename}')">View</button>
             <button class="edit-btn" onclick="editFile('${sess.id}', '${sess.filename}', \`${jsonText.replace(/`/g, '\\`')}\`)">Edit</button>
             <button class="delete-btn" onclick="deleteFile('${sess.filename}')">Delete</button>
