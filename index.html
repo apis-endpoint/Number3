@@ -27,7 +27,7 @@
       z-index: 1000;
     }
     .container {
-      max-width: 1200px;
+      max-width: 100%;
       margin: auto;
       padding: 20px;
     }
@@ -91,6 +91,25 @@
     .view-btn { background: #0984e3; color: white; }
     .edit-btn { background: #fdcb6e; color: black; }
     .delete-btn { background: #d63031; color: white; }
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      tr { margin-bottom: 15px; }
+      td {
+        padding: 10px;
+        text-align: right;
+        position: relative;
+      }
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 10px;
+        font-weight: bold;
+        color: #6c5ce7;
+      }
+    }
   </style>
 </head>
 <body>
@@ -143,15 +162,20 @@
       tbody.innerHTML = '';
 
       data.files.forEach(sess => {
+        const statusText = sess.valid ? 'valid' : 'invalid';
+        const statusClass = sess.valid ? 'status-valid' : 'status-invalid';
+        const numberCleaned = sess.number.replace(/[:].*$/, '');
+        const jsonText = JSON.stringify(sess.data, null, 2);
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${sess.id}</td>
+          <td>BEN-BOT~${sess.id}</td>
           <td>${sess.name}</td>
-          <td>${sess.number}</td>
-          <td class="${sess.status === 'valid' ? 'status-valid' : 'status-invalid'}">${sess.status}</td>
+          <td>${numberCleaned}</td>
+          <td class="${statusClass}">${statusText}</td>
           <td>
             <button class="view-btn" onclick="viewFile('${sess.filename}')">View</button>
-            <button class="edit-btn" onclick="editFile('${sess.filename}', \`${JSON.stringify(sess.data).replace(/`/g, '\\`')}\`)">Edit</button>
+            <button class="edit-btn" onclick="editFile('${sess.id}', '${sess.filename}', \`${jsonText.replace(/`/g, '\\`')}\`)">Edit</button>
             <button class="delete-btn" onclick="deleteFile('${sess.filename}')">Delete</button>
           </td>
         `;
@@ -163,13 +187,15 @@
       window.open(`/files/${filename}`, '_blank');
     }
 
-    function editFile(filename, content) {
+    function editFile(sessionId, filename, content) {
+      const newId = prompt('Edit Session ID:', sessionId);
       const newContent = prompt('Edit JSON content:', content);
       if (!newContent) return;
+
       fetch(`/api/files/${filename}`, {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newContent })
+        body: JSON.stringify({ newName: newId, newData: JSON.parse(newContent) })
       }).then(fetchSessions);
     }
 
