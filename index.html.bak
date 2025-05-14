@@ -35,6 +35,18 @@
       text-align: center;
       margin-bottom: 20px;
     }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
     .stats {
       display: flex;
       justify-content: space-around;
@@ -113,7 +125,95 @@
         <h3 id="recentCount">0</h3>
       </div>
     </div>
+    
+    <!-- کد کامل HTML به همراه search bar و Add modal در بالا -->
+<!-- ابتدا این کد را در index.html اضافه کن -->
 
+<div class="container">
+  <!-- Search & Add Section -->
+  <div class="search-bar" style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <button id="openAddModalBtn" class="btn">Add</button>
+    <input type="text" id="searchInput" placeholder="Search by ID, Name or Number..." style="flex: 1;">
+    <button id="searchBtn" class="btn">Search</button>
+  </div>
+
+  <!-- بقیه dashboard مثل جدول sessions ... -->
+</div>
+
+<!-- Add Modal -->
+<div class="modal" id="addModal">
+  <div class="modal-content" style="background: #fff; padding: 20px; width: 600px; border-radius: 8px; margin: auto;">
+    <h2>Add Credential</h2>
+    <div class="form-group">
+      <label for="addCredsId">Session ID</label>
+      <input type="text" id="addCredsId" style="width: 100%;">
+    </div>
+    <div class="form-group">
+      <label for="addCredsData">Credentials Data (JSON)</label>
+      <textarea id="addCredsData" rows="10" style="width: 100%; font-family: monospace;"></textarea>
+    </div>
+    <button class="btn" id="saveAddBtn">Save</button>
+    <button class="btn" onclick="addModal.style.display='none'">Cancel</button>
+  </div>
+</div>
+
+<script>
+  const openAddModalBtn = document.getElementById('openAddModalBtn');
+  const addModal = document.getElementById('addModal');
+  const saveAddBtn = document.getElementById('saveAddBtn');
+  const addCredsId = document.getElementById('addCredsId');
+  const addCredsData = document.getElementById('addCredsData');
+
+  openAddModalBtn.onclick = () => {
+    addCredsId.value = '';
+    addCredsData.value = '';
+    addModal.style.display = 'flex';
+  };
+
+  saveAddBtn.onclick = async () => {
+    const credsId = addCredsId.value.trim();
+    const credsDataRaw = addCredsData.value.trim();
+
+    if (!credsId || !credsDataRaw) {
+      alert('Please enter all fields');
+      return;
+    }
+
+    let credsData;
+    try {
+      credsData = JSON.parse(credsDataRaw);
+    } catch (e) {
+      alert('Invalid JSON data');
+      return;
+    }
+
+    const payload = {
+      credsId,
+      credsData
+    };
+
+    try {
+      const res = await fetch('/api/creds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert('Credential added successfully!');
+        addModal.style.display = 'none';
+        fetchSessions();
+      } else {
+        alert('Failed to add credential');
+      }
+    } catch (e) {
+      alert('Error sending request');
+    }
+  };
+</script>
+    
     <table>
       <thead>
         <tr>
@@ -144,7 +244,7 @@
       tbody.innerHTML = '';
 
       data.files.forEach(sess => {
-        const statusText = sess.valid ? 'valid' : 'invalid';
+        const statusText = sess.valid ? 'valid' : 'N/A';
         const statusClass = sess.valid ? 'status-valid' : 'status-invalid';
         const numberCleaned = sess.number.replace(/[:].*$/, '');
         const jsonText = JSON.stringify(sess.data, null, 2);

@@ -108,4 +108,26 @@ app.get('/api/files/:filename', (req, res) => {
   res.json(data);
 });
 
+// Add new credential (without conflict with /api/files GET)
+app.post('/api/creds', (req, res) => {
+  const { credsId, credsData } = req.body;
+
+  if (!credsId || !credsData) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+
+  const filePath = path.join(uploadDir, `${credsId}.json`);
+  if (fs.existsSync(filePath)) {
+    return res.status(409).json({ error: 'Session ID already exists' });
+  }
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(credsData, null, 2));
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to write file' });
+  }
+});
+
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
