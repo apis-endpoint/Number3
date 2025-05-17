@@ -370,5 +370,11 @@
     "audio": "https://raw.githubusercontent.com/apis-endpoint/Number3/main/chatroom/audios/audio_1747498850843.webm",
     "time": "20:50:52",
     "sender": "king001"
+  },
+  {
+    "username": "ping",
+    "message": "Chrome browser check",
+    "time": "20:51:06",
+    "sender": "ping"
   }
 ]
