@@ -352,5 +352,11 @@
     "message": "Check now",
     "time": "20:49:53",
     "sender": "ping"
+  },
+  {
+    "username": "ping",
+    "message": "And send voice",
+    "time": "20:49:57",
+    "sender": "ping"
   }
 ]
