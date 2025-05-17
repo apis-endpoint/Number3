@@ -1,5 +1,5 @@
 [
-  "Amir: Hello guys ",
-  "Khan: Hii",
-  "Khan: Hjjd"
+  { "user": "Amir", "text": "Hello guys", "time": "14:32" },
+  { "user": "Khan", "text": "Hii", "time": "14:32" },
+  { "user": "Khan", "text": "Hjjd", "time": "14:32" }
 ]
