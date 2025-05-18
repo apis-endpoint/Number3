@@ -1,1 +1,20 @@
-{}
+[
+  {
+    "username": "Amir",
+    "message": "Hi",
+    "time": "16:02:22",
+    "sender": "Amir"
+  },
+  {
+    "username": "Amir",
+    "message": "Hello",
+    "time": "16:11:01",
+    "sender": "Amir"
+  },
+  {
+    "username": "Amir",
+    "message": "Hello",
+    "time": "17:43:32",
+    "sender": "Amir"
+  }
+]
