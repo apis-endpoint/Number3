@@ -747,5 +747,13 @@
     "audio": "https://raw.githubusercontent.com/apis-endpoint/Number3/main/chatroom/audios/audio_1747541459316.webm",
     "time": "08:41:01",
     "sender": "nothingg"
+  },
+  {
+    "id": "msg_1747541759404",
+    "username": "Mustafah",
+    "message": "if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {     navigator.mediaDevices.getUserMedia({ audio: true })         .then(stream => {             // دسترسی داده شده             stream.getTracks().forEach(track => track.stop()); // فوراً قطع می‌کنیم         })         .catch(err => {             console.warn(\"Microphone permission denied or not available.\", err);         }); }if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {     navigator.mediaDevices.getUserMedia({ audio: true })         .then(stream => {             // دسترسی داده شده             stream.getTracks().forEach(track => track.stop()); // فوراً قطع می‌کنیم         })         .catch(err => {             console.warn(\"Microphone permission denied or not available.\", err);         }); }if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {     navigator.mediaDevices.getUserMedia({ audio: true })         .then(stream => {             // دسترسی داده شده             stream.getTracks().forEach(track => track.stop()); // فوراً قطع می‌کنیم         })         .catch(err => {             console.warn(\"Microphone permission denied or not available.\", err);         }); }if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {     navigator.mediaDevices.getUserMedia({ audio: true })         .then(stream => {             // دسترسی داده شده             stream.getTracks().forEach(track => track.stop()); // فوراً قطع می‌کنیم         })         .catch(err => {             console.warn(\"Microphone permission denied or not available.\", err);         }); }",
+    "time": "08:45:59",
+    "replyTo": null,
+    "sender": "Unknown"
   }
 ]
