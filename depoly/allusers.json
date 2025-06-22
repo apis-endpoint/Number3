@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "username": "Ali",
+    "phone": "93730285765",
+    "email": "mustafahmiakhel@gmail.com",
+    "password": "f9925e6e13fdcd9d4c560f0ee099eb9a2fc95f83f327a2e0d4ac9f5b5f5b5cf9",
+    "coins": 10,
+    "lastCoinAdd": "2025-06-22T10:00:00.000Z"
+  }
+]
